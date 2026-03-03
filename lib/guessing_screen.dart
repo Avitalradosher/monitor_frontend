@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'parallel_Video.dart';
 import 'animated_video_page.dart';
@@ -15,6 +16,7 @@ class _GuessingScreenState extends State<GuessingScreen> {
   final TextEditingController _guessController = TextEditingController();
   bool _submittedGuess = false;
   int? _userGuess;
+  double _confidence = 50.0;
   bool _videoStage = false;
   bool _selectionMade = false;
   bool? _isCorrect;
@@ -30,10 +32,19 @@ class _GuessingScreenState extends State<GuessingScreen> {
   void initState() {
     super.initState();
     realPeaks = List<double>.from(widget.data["real_peaks"]);
-    fakePeaks = List<double>.from(widget.data["fake_peaks"]);
     cleanSignal = List<double>.from(widget.data["clean_signal"]);
     peaksCount = widget.data["peaks_count"];
     duration = widget.data["duration"].toDouble();
+
+    // Generate fake peaks from real peaks with a random speed factor
+    final random = math.Random();
+    // Randomly choose: faster (0.80–0.90) or slower (1.10–1.20)
+    bool makeFaster = random.nextBool();
+    double factor = makeFaster
+        ? 0.80 + random.nextDouble() * 0.10  // 0.80 to 0.90
+        : 1.10 + random.nextDouble() * 0.10; // 1.10 to 1.20
+
+    fakePeaks = realPeaks.map((p) => p * factor).toList();
   }
 
   void _submitGuess() {
@@ -127,49 +138,109 @@ class _GuessingScreenState extends State<GuessingScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: !_submittedGuess
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "How many beats did you count?",
-                      style: TextStyle(color: Colors.white, fontSize: 20),
-                      textAlign: TextAlign.center,
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "How many beats did you count?",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 20),
+                  TextField(
+                    controller: _guessController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: Colors.white, fontSize: 24),
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      filled: true,
+                      fillColor: Colors.grey[800],
+                      hintText: "Enter number",
+                      hintStyle: TextStyle(color: Colors.white70),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    SizedBox(height: 20),
-                    TextField(
-                      controller: _guessController,
-                      keyboardType: TextInputType.number,
-                      style: TextStyle(color: Colors.white, fontSize: 24),
-                      textAlign: TextAlign.center,
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.grey[800],
-                        hintText: "Enter number",
-                        hintStyle: TextStyle(color: Colors.white70),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
+                  ),
+                  
+                  // ========== ADD CONFIDENCE SLIDER SECTION ==========
+                  SizedBox(height: 40),
+                  Text(
+                    "How confident are you?",
+                    style: TextStyle(color: Colors.white, fontSize: 18),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 20),
+                  
+                  Slider(
+                    value: _confidence,
+                    min: 0,
+                    max: 100,
+                    divisions: 20,
+                    label: '${_confidence.round()}%',
+                    activeColor: Colors.blue,
+                    inactiveColor: Colors.grey[700],
+                    onChanged: (double value) {
+                      setState(() {
+                        _confidence = value;
+                      });
+                    },
+                  ),
+                  
+                  // Display confidence percentage
+                  Text(
+                    '${_confidence.round()}%',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
                     ),
-                    SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _submitGuess,
-                      child: Text("Submit"),
-                    )
-                  ],
-                )
+                  ),
+                  SizedBox(height: 5),
+                  
+                  // Labels under slider
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Not confident',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                        Text(
+                          'Very confident',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // ========== END CONFIDENCE SLIDER SECTION ==========
+                  
+                  SizedBox(height: 30),
+                  ElevatedButton(
+                    onPressed: _submitGuess,
+                    child: Text("Submit"),
+                  )
+                ],
+              )
               : !_videoStage
                   ? SizedBox()
                   : Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          "You guessed: $_userGuess\nActual: $peaksCount",
-                          style: TextStyle(color: Colors.white, fontSize: 20),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 40),
-                        Text(
-                          "Which animation is the real one?",
-                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        Column(
+                          children: [
+                            Text(
+                              "You guessed: $_userGuess\nActual: $peaksCount",
+                              style: TextStyle(color: Colors.white, fontSize: 20),
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              "Your confidence: ${_confidence.round()}%",
+                              style: TextStyle(color: Colors.blue, fontSize: 18),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                         SizedBox(height: 20),
                         Row(
