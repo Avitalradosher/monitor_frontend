@@ -8,6 +8,10 @@ import 'guessing_screen.dart';
 const int TOTAL_DURATION = 20; // Total duration in seconds
 
 class BiofeedbackScreen extends StatefulWidget {
+  final VoidCallback? onSessionComplete;
+
+  const BiofeedbackScreen({this.onSessionComplete});
+
   @override
   _BiofeedbackScreenState createState() => _BiofeedbackScreenState();
 }
@@ -153,7 +157,10 @@ class _BiofeedbackScreenState extends State<BiofeedbackScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => GuessingScreen(data: packagedData),
+            builder: (_) => GuessingScreen(
+              data: packagedData,
+              onSessionComplete: widget.onSessionComplete,
+            ),
           ),
         );
       } else {

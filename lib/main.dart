@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'welcome.dart'; // Import CameraPage
+import 'forest_trail_screen.dart';
 
 void main() {
   runApp(MyApp());
@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: WelcomePage(), // Redirect directly to CameraPage
+      home: ForestTrailHome(),
     );
   }
 }

@@ -5,8 +5,9 @@ import 'animated_video_page.dart';
 
 class GuessingScreen extends StatefulWidget {
   final Map<String, dynamic> data;
+  final VoidCallback? onSessionComplete;
 
-  const GuessingScreen({required this.data});
+  const GuessingScreen({required this.data, this.onSessionComplete});
 
   @override
   _GuessingScreenState createState() => _GuessingScreenState();
@@ -47,6 +48,18 @@ class _GuessingScreenState extends State<GuessingScreen> {
     fakePeaks = realPeaks.map((p) => p * factor).toList();
   }
 
+  void _finishSession() {
+    if (!mounted) return;
+    if (widget.onSessionComplete != null) {
+      widget.onSessionComplete!();
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => BiofeedbackScreen()),
+      );
+    }
+  }
+
   void _submitGuess() {
     if (_guessController.text.isEmpty) return;
     setState(() {
@@ -70,10 +83,7 @@ class _GuessingScreenState extends State<GuessingScreen> {
             });
 
             Future.delayed(Duration(seconds: 2), () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => BiofeedbackScreen()),
-              );
+              _finishSession();
             });
           },
         ),
@@ -117,10 +127,7 @@ class _GuessingScreenState extends State<GuessingScreen> {
                   });
 
                   Future.delayed(Duration(seconds: 2), () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => BiofeedbackScreen()),
-                    );
+                    _finishSession();
                   });
                 },
           child: Text("This is real"),
